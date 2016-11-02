@@ -18,6 +18,12 @@ class NotificationClosedReason(enum.IntEnum):
     UNDEFINED = 4
 
 
+class NotificationUrgency(enum.Enum):
+    LOW = 0
+    NORMAL = 1
+    CRITICAL = 2
+
+
 class NotificationServer(dbus.service.Object):
     IFACE = 'org.freedesktop.Notifications'
     OPATH = '/org/freedesktop/Notifications'
@@ -53,7 +59,8 @@ class NotificationServer(dbus.service.Object):
                          out_signature='u')
     def Notify(self, app_name, replaces_id, app_icon, summary, body,
                actions, hints, expire_timeout):
-        notification = Notification(str(summary), str(body), int(replaces_id))
+        urgency = NotificationUrgency(hints.get('urgency', 1))
+        notification = Notification(str(summary), str(body), int(replaces_id), urgency)
         notification.show()
         return notification.message_id
 

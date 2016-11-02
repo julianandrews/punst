@@ -6,16 +6,17 @@ class Notification(object):
 
     __notifications = collections.OrderedDict()
 
-    def __init__(self, summary, body, replaces_id):
+    def __init__(self, summary, body, replaces_id, urgency):
         self.summary = summary
         self.body = body
+        self.urgency = urgency
         self.message_id = replaces_id or self._get_next_message_id()
 
         self.__notifications.pop(self.message_id, None)
         self.__notifications[self.message_id] = self
 
     def show(self):
-        print("{}: {}".format(self.message_id, self))
+        print("{} - {}: {}".format(self.message_id, self.urgency, self))
 
     def close(self):
         pass
