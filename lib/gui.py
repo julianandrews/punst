@@ -19,21 +19,26 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         height = cr.get_target().get_height()
         bg_color = hex_to_rgb(settings.BG_COLORS[self.urgency])
         fg_color = hex_to_rgb(settings.FG_COLORS[self.urgency])
+        if settings.FRAME_COLOR is None:
+            frame_color = fg_color
+        else:
+            frame_color = hex_to_rgb(settings.FRAME_COLOR)
 
         cr.set_source_rgb(*bg_color)
         cr.rectangle(0, 0, width, height)
         cr.fill()
-        cr.set_source_rgb(*fg_color)
+        cr.set_source_rgb(*frame_color)
         cr.rectangle(0, 0, width, height)
-        cr.set_line_width(2 * settings.BORDER_WIDTH)
+        cr.set_line_width(2 * settings.FRAME_WIDTH)
         cr.stroke()
+        cr.set_source_rgb(*fg_color)
 
         layout = PangoCairo.create_layout(cr)
         desc = Pango.FontDescription(settings.FONT)
         layout.set_font_description(desc)
         layout.set_width(Pango.SCALE * (
             settings.WINDOW_WIDTH -
-            2 * (settings.PADDING[0] + settings.BORDER_WIDTH)
+            2 * (settings.PADDING[0] + settings.FRAME_WIDTH)
         ))
         layout.set_alignment(Pango.Alignment.LEFT)
         layout.set_wrap(Pango.WrapMode.WORD_CHAR)
@@ -41,11 +46,11 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         height = layout.get_pixel_size()[1]
         self.get_parent_window().resize(
             settings.WINDOW_WIDTH,
-            height + 2 * (settings.PADDING[1] + settings.BORDER_WIDTH),
+            height + 2 * (settings.PADDING[1] + settings.FRAME_WIDTH),
         )
 
         cr.translate(*settings.PADDING)
-        cr.translate(settings.BORDER_WIDTH, settings.BORDER_WIDTH)
+        cr.translate(settings.FRAME_WIDTH, settings.FRAME_WIDTH)
         PangoCairo.update_layout(cr, layout)
         PangoCairo.show_layout(cr, layout)
 
