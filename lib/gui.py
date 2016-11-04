@@ -42,7 +42,10 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         ))
         layout.set_alignment(Pango.Alignment.LEFT)
         layout.set_wrap(Pango.WrapMode.WORD_CHAR)
-        layout.set_markup(self.text, -1)
+        if settings.USE_MARKUP:
+            layout.set_markup(self.text, -1)
+        else:
+            layout.set_text(self.text, -1)
         layout_height = layout.get_pixel_size()[1]
         height = layout_height + 2 * (settings.PADDING[1] + settings.FRAME_WIDTH)
         parent = self.get_parent_window()

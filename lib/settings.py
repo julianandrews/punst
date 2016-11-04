@@ -2,6 +2,7 @@ from .utils import NotificationUrgency
 
 
 HISTORY_SIZE = 20
+USE_MARKUP = True
 MONITOR_NUMBER = 0
 WIDTH = 300
 HEIGHT = None
