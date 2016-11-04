@@ -5,7 +5,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 from dbus.mainloop.glib import DBusGMainLoop
 
-from lib.server import NotificationServer
+from lib.dbus_server import NotificationServer
 
 
 if __name__ == '__main__':
