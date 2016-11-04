@@ -4,9 +4,10 @@ from .utils import NotificationUrgency
 HISTORY_SIZE = 20
 MONITOR_NUMBER = 0
 WINDOW_WIDTH = 400
-PADDING = (15, 15)
+PADDING = (10, 10)
 FONT = "Sans 10"
 FORMAT = "<b>%s</b>\n%b"
+BORDER_WIDTH = 1
 
 BG_COLORS = {
     NotificationUrgency.LOW: "#222222",
