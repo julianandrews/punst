@@ -20,7 +20,7 @@ FG_COLORS = {
 }
 
 TIMEOUTS = {
-    NotificationUrgency.LOW: 5000,
-    NotificationUrgency.NORMAL: 5000,
+    NotificationUrgency.LOW: 10000,
+    NotificationUrgency.NORMAL: 10000,
     NotificationUrgency.CRITICAL: None,
 }
