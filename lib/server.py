@@ -2,12 +2,12 @@ import dbus
 import dbus.service
 import enum
 
-from . import Notification
-
-__version__ = '0.1'
+from .notification import Notification
+from .utils import NotificationUrgency
 
 APP_NAME = 'punst'
 VENDOR = ''
+VERSION = '0.1'
 SPEC_VERSION = '1.2'
 
 
@@ -16,12 +16,6 @@ class NotificationClosedReason(enum.IntEnum):
     DISMISSED = 2
     CLOSED = 3
     UNDEFINED = 4
-
-
-class NotificationUrgency(enum.Enum):
-    LOW = 0
-    NORMAL = 1
-    CRITICAL = 2
 
 
 class NotificationServer(dbus.service.Object):
@@ -53,7 +47,7 @@ class NotificationServer(dbus.service.Object):
     @dbus.service.method(dbus_interface=IFACE, in_signature=None,
                          out_signature='ssss')
     def GetServerInformation(self):
-        return [APP_NAME, VENDOR, __version__, SPEC_VERSION]
+        return [APP_NAME, VENDOR, VERSION, SPEC_VERSION]
 
     @dbus.service.method(dbus_interface=IFACE, in_signature='susssasa{sv}i',
                          out_signature='u')

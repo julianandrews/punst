@@ -1,2 +1,1 @@
-from .notification import Notification
-from .server import NotificationServer
+from server import VERSION as __version__
