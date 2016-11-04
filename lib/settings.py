@@ -3,7 +3,10 @@ from .utils import NotificationUrgency
 
 HISTORY_SIZE = 20
 MONITOR_NUMBER = 0
-WINDOW_WIDTH = 300
+WIDTH = 300
+HEIGHT = None
+X = -10
+Y = 10
 PADDING = (10, 10)
 FONT = "Sans 10"
 FORMAT = "<b>%s</b>\n%b"

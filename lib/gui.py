@@ -37,17 +37,26 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         desc = Pango.FontDescription(settings.FONT)
         layout.set_font_description(desc)
         layout.set_width(Pango.SCALE * (
-            settings.WINDOW_WIDTH -
+            settings.WIDTH -
             2 * (settings.PADDING[0] + settings.FRAME_WIDTH)
         ))
         layout.set_alignment(Pango.Alignment.LEFT)
         layout.set_wrap(Pango.WrapMode.WORD_CHAR)
         layout.set_markup(self.text, -1)
-        height = layout.get_pixel_size()[1]
-        self.get_parent_window().resize(
-            settings.WINDOW_WIDTH,
-            height + 2 * (settings.PADDING[1] + settings.FRAME_WIDTH),
-        )
+        layout_height = layout.get_pixel_size()[1]
+        height = layout_height + 2 * (settings.PADDING[1] + settings.FRAME_WIDTH)
+        parent = self.get_parent_window()
+        parent.resize(settings.WIDTH, height)
+
+        screen = Gdk.Screen.get_default()
+        monitor_rect = screen.get_monitor_geometry(settings.MONITOR_NUMBER)
+        x = monitor_rect.x + settings.X
+        if settings.X < 0:
+            x += monitor_rect.width - settings.WIDTH
+        y = monitor_rect.y + settings.Y
+        if settings.Y < 0:
+            y += monitor_rect.height - height
+        parent.move(x, y)
 
         cr.translate(*settings.PADDING)
         cr.translate(settings.FRAME_WIDTH, settings.FRAME_WIDTH)
@@ -67,19 +76,13 @@ class NotificationWindow(Gtk.Window):
         self.drawing_area = NotificationDrawingArea()
         self.drawing_area.show()
         self.add(self.drawing_area)
-        self.set_size_request(settings.WINDOW_WIDTH, 200)
+        self.set_size_request(settings.WIDTH, -1)
         self.connect('button-release-event', self.on_click)
 
     def draw(self, summary, body, urgency):
         self.drawing_area.text = format_text(settings.FORMAT, summary, body)
         self.drawing_area.urgency = urgency
         self.drawing_area.queue_draw()
-        screen = Gdk.Screen.get_default()
-        monitor_rect = screen.get_monitor_geometry(settings.MONITOR_NUMBER)
-        self.move(
-            monitor_rect.x + monitor_rect.width - settings.WINDOW_WIDTH - 50,
-            monitor_rect.y + 50
-        )
 
     def popup(self, summary, body, urgency):
         self.draw(summary, body, urgency)
