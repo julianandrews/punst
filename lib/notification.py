@@ -23,7 +23,6 @@ class Notification(object):
     def close(self):
         self.__window.remove()
 
-
     @classmethod
     def get_by_id(cls, message_id):
         return cls.__notifications.get(message_id)
