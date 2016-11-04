@@ -4,7 +4,7 @@ gi.require_version('PangoCairo', '1.0')
 from gi.repository import Gtk, Gdk, GObject, Pango, PangoCairo
 
 from . import settings
-from .utils import hex_to_rgb, NotificationUrgency
+from .utils import hex_to_rgb, format_text, NotificationUrgency
 
 
 class NotificationDrawingArea(Gtk.DrawingArea):
@@ -58,7 +58,7 @@ class NotificationWindow(Gtk.Window):
         self.connect('button-release-event', self.on_click)
 
     def draw(self, summary, body, urgency):
-        self.drawing_area.text = "<b>{}</b>\n{}".format(summary, body)
+        self.drawing_area.text = format_text(settings.FORMAT, summary, body)
         self.drawing_area.urgency = urgency
         self.drawing_area.queue_draw()
         screen = Gdk.Screen.get_default()

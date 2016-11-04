@@ -6,6 +6,7 @@ MONITOR_NUMBER = 0
 WINDOW_WIDTH = 400
 PADDING = (15, 15)
 FONT = "Sans 10"
+FORMAT = "<b>%s</b>\n%b"
 
 BG_COLORS = {
     NotificationUrgency.LOW: "#222222",
@@ -14,8 +15,8 @@ BG_COLORS = {
 }
 
 FG_COLORS = {
-    NotificationUrgency.LOW: "#FFFFFF",
-    NotificationUrgency.NORMAL: "#888888",
+    NotificationUrgency.LOW: "#888888",
+    NotificationUrgency.NORMAL: "#FFFFFF",
     NotificationUrgency.CRITICAL: "#000000",
 }
 
