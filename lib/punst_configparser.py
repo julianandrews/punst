@@ -17,6 +17,12 @@ class ConfigError(Exception):
 
 
 class PunstConfigParser(RawConfigParser):
+    def getalignment(self, section, option):
+        value = self.get(section, option)
+        if not value.upper() in ('LEFT', 'RIGHT', 'CENTER'):
+            raise ConfigError("invalid alignment")
+        return value
+
     def getint(self, section, option):
         try:
             return super(PunstConfigParser, self).getint(section, option)

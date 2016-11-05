@@ -22,7 +22,9 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         layout.set_width(Pango.SCALE * (
             width - 2 * (settings.PADDING[0] + settings.FRAME_WIDTH)
         ))
-        layout.set_alignment(Pango.Alignment.LEFT)
+        layout.set_alignment(
+            getattr(Pango.Alignment, settings.ALIGNMENT.upper())
+        )
         layout.set_wrap(Pango.WrapMode.WORD_CHAR)
         if settings.USE_MARKUP:
             layout.set_markup(self.text, -1)

@@ -22,6 +22,7 @@ try:
     FONT = config.get('global', 'font')
     USE_MARKUP = config.getboolean('global', 'allow_markup')
     FORMAT = config.get('global', 'format').encode().decode('unicode_escape')
+    ALIGNMENT = config.getalignment('global', 'alignment')
     WIDTH, HEIGHT, INVERT_X, X, INVERT_Y, Y = config.getgeometry(
         'global', 'geometry'
     )
