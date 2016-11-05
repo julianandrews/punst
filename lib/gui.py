@@ -4,7 +4,7 @@ gi.require_version('PangoCairo', '1.0')
 from gi.repository import Gtk, Gdk, GObject, Pango, PangoCairo
 
 from . import settings
-from .utils import hex_to_rgb, format_text, NotificationUrgency
+from .utils import format_text, NotificationUrgency
 
 
 class NotificationDrawingArea(Gtk.DrawingArea):
@@ -14,47 +14,54 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         self.text = ""
         self.urgency = NotificationUrgency.NORMAL
 
-    def build_layout(self, cr):
+    def build_layout(self, cr, width):
+        # FIXME: respect settings.HEIGHT
         layout = PangoCairo.create_layout(cr)
         desc = Pango.FontDescription(settings.FONT)
         layout.set_font_description(desc)
         layout.set_width(Pango.SCALE * (
-            settings.WIDTH -
-            2 * (settings.PADDING[0] + settings.FRAME_WIDTH)
+            width - 2 * (settings.PADDING[0] + settings.FRAME_WIDTH)
         ))
         layout.set_alignment(Pango.Alignment.LEFT)
         layout.set_wrap(Pango.WrapMode.WORD_CHAR)
         if settings.USE_MARKUP:
             layout.set_markup(self.text, -1)
         else:
-            layout.set_text(self.text, -1)
+            layout.set_text(self.text, -1)  # FIXME: strip markup
         return layout
 
-    def position_window(self, width, height):
+    def set_monitor_dimensions(self):
         screen = Gdk.Screen.get_default()
         monitor_rect = screen.get_monitor_geometry(settings.MONITOR_NUMBER)
-        x = monitor_rect.x + settings.X
+        self.monitor_x = monitor_rect.x
+        self.monitor_y = monitor_rect.y
+        self.monitor_width = monitor_rect.width
+        self.monitor_height = monitor_rect.height
+
+    def position_window(self, width, height):
+        x = self.monitor_x + settings.X
         if settings.X < 0:
-            x += monitor_rect.width - width
-        y = monitor_rect.y + settings.Y
+            x += self.monitor_width - width
+        y = self.monitor_y + settings.Y
         if settings.Y < 0:
-            y += monitor_rect.height - height
+            y += self.monitor_height - height
 
         parent = self.get_parent_window()
         parent.resize(width, height)
         parent.move(x, y)
 
     def draw(self, widget, cr):
-        layout = self.build_layout(cr)
-        width = settings.WIDTH
+        self.set_monitor_dimensions()
+        width = (settings.WIDTH - 1) % self.monitor_width + 1
+        layout = self.build_layout(cr, width)
         height = layout.get_pixel_size()[1] + 2 * (settings.PADDING[1] + settings.FRAME_WIDTH)
 
-        bg_color = hex_to_rgb(settings.BG_COLORS[self.urgency])
-        fg_color = hex_to_rgb(settings.FG_COLORS[self.urgency])
+        bg_color = settings.BG_COLORS[self.urgency]
+        fg_color = settings.FG_COLORS[self.urgency]
         if settings.FRAME_COLOR is None:
             frame_color = fg_color
         else:
-            frame_color = hex_to_rgb(settings.FRAME_COLOR)
+            frame_color = settings.FRAME_COLOR
 
         cr.set_source_rgb(*bg_color)
         cr.rectangle(0, 0, width, height)
@@ -84,7 +91,6 @@ class NotificationWindow(Gtk.Window):
         self.drawing_area = NotificationDrawingArea()
         self.drawing_area.show()
         self.add(self.drawing_area)
-        self.set_size_request(settings.WIDTH, -1)
         self.connect('button-release-event', self.on_click)
 
     def popup(self, summary, body, urgency):

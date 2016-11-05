@@ -3,11 +3,10 @@ import dbus.service
 import enum
 
 from .notification import Notification
+from .settings import APP_NAME, VENDOR, VERSION
 from .utils import NotificationUrgency
 
-APP_NAME = 'punst'
-VENDOR = ''
-VERSION = '0.1'
+
 SPEC_VERSION = '1.2'
 
 

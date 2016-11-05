@@ -33,7 +33,7 @@ class Notification(object):
         if not ids:
             return 1
         else:
-            if len(ids) > settings.HISTORY_SIZE:
+            if len(ids) > settings.HISTORY_LENGTH:
                 del cls.__notifications[ids[0]]
             return ids[-1] + 1
 

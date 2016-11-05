@@ -1,1 +1,1 @@
-from .dbus_server import VERSION as __version__
+from .settings import VERSION as __version__

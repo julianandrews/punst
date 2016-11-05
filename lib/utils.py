@@ -1,14 +1,11 @@
 import enum
+import re
 
 
 class NotificationUrgency(enum.Enum):
     LOW = 0
     NORMAL = 1
     CRITICAL = 2
-
-
-def hex_to_rgb(s):
-    return tuple(int(s[i:i+2], 16) / 255.0 for i in range(1, 6, 2))
 
 
 def format_text(format_string, summary, body):
@@ -29,3 +26,23 @@ def format_text(format_string, summary, body):
             formatted += c1
             i += 1
     return formatted
+
+
+def hex_to_rgb(s):
+    if s[0] == s[-1] == '"' or s[0] == s[-1] == "'":
+        s = s[1:-1]
+    if s[0] == '#':
+        s = s[1:]
+    if len(s) != 6:
+        raise ValueError("Invalid hex literal")
+    return tuple(int(s[i:i+2], 16) / 255.0 for i in range(0, 5, 2))
+
+
+def parse_geometry(s):
+    if s[0] == s[-1] == '"' or s[0] == s[-1] == "'":
+        s = s[1:-1]
+    results = re.match('^(?:(-?\d+)?x(\d+)?)?(?:([+-]\d+)([+-]\d+))?$', s)
+    if not results:
+        raise ValueError("Invalid geometry literal")
+    else:
+        return (int(x) if x else 0 for x in results.groups())
