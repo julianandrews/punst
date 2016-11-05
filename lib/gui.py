@@ -39,12 +39,14 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         self.monitor_height = monitor_rect.height
 
     def position_window(self, width, height):
-        x = self.monitor_x + settings.X
-        if settings.X < 0:
-            x += self.monitor_width - width
-        y = self.monitor_y + settings.Y
-        if settings.Y < 0:
-            y += self.monitor_height - height
+        if settings.INVERT_X:
+            x = self.monitor_width - width - settings.X
+        else:
+            x = self.monitor_x + settings.X
+        if settings.INVERT_Y:
+            y = self.monitor_height - height - settings.Y
+        else:
+            y = self.monitor_y + settings.Y
 
         parent = self.get_parent_window()
         parent.resize(width, height)
@@ -52,7 +54,10 @@ class NotificationDrawingArea(Gtk.DrawingArea):
 
     def draw(self, widget, cr):
         self.set_monitor_dimensions()
-        width = (settings.WIDTH - 1) % self.monitor_width + 1
+        width = min(
+            (settings.WIDTH - 1) % self.monitor_width + 1,
+            self.monitor_width - settings.X - settings.FRAME_WIDTH
+        )
         layout = self.build_layout(cr, width)
         height = layout.get_pixel_size()[1] + 2 * (settings.PADDING[1] + settings.FRAME_WIDTH)
 

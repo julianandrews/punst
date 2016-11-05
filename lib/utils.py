@@ -41,8 +41,16 @@ def hex_to_rgb(s):
 def parse_geometry(s):
     if s[0] == s[-1] == '"' or s[0] == s[-1] == "'":
         s = s[1:-1]
-    results = re.match('^(?:(-?\d+)?x(\d+)?)?(?:([+-]\d+)([+-]\d+))?$', s)
+    results = re.match('^(?:(-?\d+)?x(\d+)?)?(?:([+-])(\d+)([+-])(\d+))?$', s)
     if not results:
         raise ValueError("Invalid geometry literal")
     else:
-        return (int(x) if x else 0 for x in results.groups())
+        vals = results.groups()
+        return (
+            int(vals[0] or 0),
+            int(vals[1] or 0),
+            vals[2] == '-',
+            int(vals[3] or 0),
+            vals[4] == '-',
+            int(vals[5] or 0)
+        )

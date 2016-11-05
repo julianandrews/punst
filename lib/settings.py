@@ -22,7 +22,9 @@ try:
     FONT = config.get('global', 'font')
     USE_MARKUP = config.getboolean('global', 'allow_markup')
     FORMAT = config.get('global', 'format').encode().decode('unicode_escape')
-    WIDTH, HEIGHT, X, Y = config.getgeometry('global', 'geometry')
+    WIDTH, HEIGHT, INVERT_X, X, INVERT_Y, Y = config.getgeometry(
+        'global', 'geometry'
+    )
     MONITOR_NUMBER = config.getint('global', 'monitor')
     HISTORY_LENGTH = config.getint('global', 'history_length')
     PADDING = (
