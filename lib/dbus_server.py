@@ -50,10 +50,13 @@ class NotificationServer(dbus.service.Object):
 
     @dbus.service.method(dbus_interface=IFACE, in_signature='susssasa{sv}i',
                          out_signature='u')
-    def Notify(self, app_name, replaces_id, app_icon, summary, body,
+    def Notify(self, app_name, replaces_id, icon, summary, body,
                actions, hints, expire_timeout):
         urgency = NotificationUrgency(hints.get('urgency', 1))
-        notification = Notification(str(summary), str(body), int(replaces_id), urgency)
+        notification = Notification(
+            str(app_name), str(summary), str(body), str(icon),
+            int(replaces_id), urgency,
+        )
         notification.show(int(expire_timeout))
         return notification.message_id
 

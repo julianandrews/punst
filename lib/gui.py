@@ -5,20 +5,20 @@ gi.require_version('PangoCairo', '1.0')  # noqa
 from gi.repository import Gdk, GObject, Gtk, Pango, PangoCairo
 
 from . import settings
-from .utils import format_text, NotificationUrgency
+from .utils import NotificationUrgency
 
 
 class NotificationDrawingArea(Gtk.DrawingArea):
-    def __init__(self, summary, body, urgency, width):
+    def __init__(self, notification, width):
         super(NotificationDrawingArea, self).__init__()
-        self.set_text(summary, body)
-        self.urgency = urgency
+        self.set_text(notification)
+        self.urgency = notification.urgency
         self.width = width
         self.height = 0
         self.connect('draw', self.draw)
 
-    def set_text(self, summary, body):
-        text = format_text(settings.FORMAT, summary, body)
+    def set_text(self, notification):
+        text = notification.formatted_text
         use_plain_text = settings.PLAIN_TEXT
         if not settings.PLAIN_TEXT:
             # Default to using plain text if the markup can't be parsed
@@ -33,7 +33,7 @@ class NotificationDrawingArea(Gtk.DrawingArea):
             if settings.ALLOW_MARKUP and use_plain_text:
                 summary = GObject.markup_escape_text(summary)
                 body = GObject.markup_escape_text(body)
-            self.text = format_text(settings.FORMAT, summary, body)
+            self.text = notification.formatted_text
 
     def build_layout(self, cr):
         layout = PangoCairo.create_layout(cr)
@@ -141,10 +141,7 @@ class NotificationWindow(Gtk.Window):
         for child in self.box.get_children():
             self.box.remove(child)
         for notification in self.get_notifications_to_draw():
-            drawing_area = NotificationDrawingArea(
-                notification.summary, notification.body, notification.urgency,
-                self.width,
-            )
+            drawing_area = NotificationDrawingArea(notification, self.width)
             drawing_area.show()
             self.box.add(drawing_area)
         self.show()
