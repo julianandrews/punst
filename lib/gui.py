@@ -18,19 +18,22 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         self.connect('draw', self.draw)
 
     def set_text(self, summary, body):
-        if settings.ALLOW_MARKUP:
-            # escape text if 'plain_text' is True or the markup is bad
-            use_plain_text = settings.PLAIN_TEXT
-            if not settings.PLAIN_TEXT:
-                try:
-                    text = format_text(settings.FORMAT, summary, body)
-                    Pango.parse_markup(text, -1, u'\x00')
-                except GObject.GError:
-                    use_plain_text = True
-            if use_plain_text:
-                summary  = GObject.markup_escape_text(summary)
-                body  = GObject.markup_escape_text(body)
-        self.text = format_text(settings.FORMAT, summary, body)
+        text = format_text(settings.FORMAT, summary, body)
+        use_plain_text = settings.PLAIN_TEXT
+        if not settings.PLAIN_TEXT:
+            # Default to using plain text if the markup can't be parsed
+            try:
+                parsed = Pango.parse_markup(text, -1, u'\x00')
+            except GObject.GError:
+                use_plain_text = True
+
+        if not settings.ALLOW_MARKUP and not use_plain_text:
+            self.text = parsed.text
+        else:
+            if settings.ALLOW_MARKUP and use_plain_text:
+                summary = GObject.markup_escape_text(summary)
+                body = GObject.markup_escape_text(body)
+            self.text = format_text(settings.FORMAT, summary, body)
 
     def build_layout(self, cr):
         # FIXME: respect settings.HEIGHT
