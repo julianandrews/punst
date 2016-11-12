@@ -39,9 +39,7 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         layout.set_ellipsize(Pango.EllipsizeMode.END)
         layout.set_wrap(Pango.WrapMode.WORD_CHAR)
         layout.set_font_description(Pango.FontDescription(settings.FONT))
-        layout.set_alignment(
-            getattr(Pango.Alignment, settings.ALIGNMENT.upper())
-        )
+        layout.set_alignment(getattr(Pango.Alignment, settings.ALIGNMENT.value))
 
         if settings.ALLOW_MARKUP:
             layout.set_markup(self.text, -1)

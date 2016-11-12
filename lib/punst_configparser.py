@@ -45,11 +45,12 @@ class ConfigError(Exception):
 
 
 class PunstConfigParser(RawConfigParser):
-    def getalignment(self, section, option):
+    def getenum(self, section, option, enum):
         value = self.get(section, option)
-        if not value.upper() in ('LEFT', 'RIGHT', 'CENTER'):
-            raise ConfigError("invalid alignment")
-        return value
+        try:
+            return enum[value.upper()]
+        except KeyError:
+            raise ConfigError("invalid {}".format(enum.__name__))
 
     def getint(self, section, option):
         try:

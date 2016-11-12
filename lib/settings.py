@@ -13,6 +13,12 @@ class NotificationUrgency(enum.Enum):
     CRITICAL = 2
 
 
+class AlignmentType(enum.Enum):
+    LEFT = 'LEFT'
+    RIGHT = 'RIGHT'
+    CENTER = 'CENTER'
+
+
 APP_NAME = 'punst'
 VENDOR = ''
 VERSION = '0.1'
@@ -30,7 +36,7 @@ try:
     ALLOW_MARKUP = config.getboolean('global', 'allow_markup')
     PLAIN_TEXT = config.getboolean('global', 'plain_text')
     FORMAT = config.get('global', 'format').encode().decode('unicode_escape')
-    ALIGNMENT = config.getalignment('global', 'alignment')
+    ALIGNMENT = config.getenum('global', 'alignment', AlignmentType)
     WORD_WRAP = config.getboolean('global', 'word_wrap')
     WIDTH, HEIGHT, INVERT_X, X, INVERT_Y, Y = config.getgeometry(
         'global', 'geometry'
