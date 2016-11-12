@@ -36,21 +36,23 @@ class NotificationDrawingArea(Gtk.DrawingArea):
             self.text = format_text(settings.FORMAT, summary, body)
 
     def build_layout(self, cr):
-        # FIXME: respect settings.HEIGHT
         layout = PangoCairo.create_layout(cr)
+        layout.set_ellipsize(Pango.EllipsizeMode.END)
+        layout.set_wrap(Pango.WrapMode.WORD_CHAR)
+        layout.set_font_description(Pango.FontDescription(settings.FONT))
+        layout.set_alignment(
+            getattr(Pango.Alignment, settings.ALIGNMENT.upper())
+        )
+
         if settings.ALLOW_MARKUP:
             layout.set_markup(self.text, -1)
         else:
             layout.set_text(self.text, -1)
-        desc = Pango.FontDescription(settings.FONT)
-        layout.set_font_description(desc)
         layout.set_width(Pango.SCALE * (
             self.width - 2 * (settings.PADDING[0] + settings.FRAME_WIDTH)
         ))
-        layout.set_alignment(
-            getattr(Pango.Alignment, settings.ALIGNMENT.upper())
-        )
-        layout.set_wrap(Pango.WrapMode.WORD_CHAR)
+        layout.set_height(-settings.HEIGHT if settings.WORD_WRAP else -1)
+
         return layout
 
     def draw(self, widget, cr):

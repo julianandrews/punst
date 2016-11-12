@@ -24,6 +24,7 @@ try:
     PLAIN_TEXT = config.getboolean('global', 'plain_text')
     FORMAT = config.get('global', 'format').encode().decode('unicode_escape')
     ALIGNMENT = config.getalignment('global', 'alignment')
+    WORD_WRAP = config.getboolean('global', 'word_wrap')
     WIDTH, HEIGHT, INVERT_X, X, INVERT_Y, Y = config.getgeometry(
         'global', 'geometry'
     )
