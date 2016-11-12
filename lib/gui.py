@@ -68,7 +68,6 @@ class NotificationWindow(Gtk.Window):
 
         self.notifications = []
         self.timeouts = {}
-        self.set_dimensions()
         self.box = Gtk.VBox()
         self.box.show()
         self.add(self.box)
@@ -117,6 +116,7 @@ class NotificationWindow(Gtk.Window):
         ]
 
     def display_notifications(self):
+        self.set_dimensions()
         for child in self.box.get_children():
             self.box.remove(child)
         for notification in self.get_notifications_to_draw():
@@ -126,19 +126,29 @@ class NotificationWindow(Gtk.Window):
         self.show()
         self.queue_draw()
 
+    def get_selected_monitor(self):
+        screen = Gdk.Screen.get_default()
+        if settings.FOLLOW == settings.FollowType.MOUSE:
+            pointer = screen.get_root_window().get_pointer()
+            return screen.get_monitor_at_point(pointer.x, pointer.y)
+        elif settings.FOLLOW == settings.FollowType.KEYBOARD:
+            return screen.get_monitor_at_window(screen.get_active_window())
+        else:
+            return settings.MONITOR_NUMBER
+
     def set_dimensions(self):
         screen = Gdk.Screen.get_default()
-        monitor_rect = screen.get_monitor_geometry(settings.MONITOR_NUMBER)
+        monitor_rect = screen.get_monitor_geometry(self.get_selected_monitor())
         self.width = min(
             (settings.WIDTH - 1) % monitor_rect.width + 1,
             monitor_rect.width - settings.X - settings.FRAME_WIDTH
         )
         if settings.INVERT_X:
-            self.x_offset = monitor_rect.width - settings.X
+            self.x_offset = monitor_rect.x + monitor_rect.width - settings.X
         else:
             self.x_offset = monitor_rect.x + settings.X
         if settings.INVERT_Y:
-            self.y_offset = monitor_rect.height - settings.Y
+            self.y_offset = monitor_rect.y + monitor_rect.height - settings.Y
         else:
             self.y_offset = monitor_rect.y + settings.Y
 

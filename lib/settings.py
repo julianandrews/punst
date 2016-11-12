@@ -19,6 +19,12 @@ class AlignmentType(enum.Enum):
     CENTER = 'CENTER'
 
 
+class FollowType(enum.Enum):
+    NONE = 0
+    MOUSE = 1
+    KEYBOARD = 2
+
+
 APP_NAME = 'punst'
 VENDOR = ''
 VERSION = '0.1'
@@ -42,6 +48,7 @@ try:
         'global', 'geometry'
     )
     MONITOR_NUMBER = config.getint('global', 'monitor')
+    FOLLOW = config.getenum('global', 'follow', FollowType)
     HISTORY_LENGTH = config.getint('global', 'history_length')
     PADDING = (
         config.getint('global', 'horizontal_padding'),
