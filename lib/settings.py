@@ -55,6 +55,7 @@ try:
         config.getint('global', 'horizontal_padding'),
         config.getint('global', 'padding'),
     )
+    STARTUP_NOTIFICATION = config.getboolean('global', 'startup_notification')
 
     FRAME_WIDTH = config.getint('frame', 'width')
     FRAME_COLOR = config.gethexcolor('frame', 'color')

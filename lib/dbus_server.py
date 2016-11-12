@@ -3,7 +3,7 @@ import dbus.service
 import enum
 
 from .notification import Notification
-from .settings import NotificationUrgency, APP_NAME, VENDOR, VERSION
+import settings
 
 
 SPEC_VERSION = '1.2'
@@ -26,6 +26,12 @@ class NotificationServer(dbus.service.Object):
         bus.request_name(self.BUS_NAME)
         bus_name = dbus.service.BusName(self.BUS_NAME, bus=bus)
         dbus.service.Object.__init__(self, bus_name, self.OPATH)
+        if settings.STARTUP_NOTIFICATION:
+            notification = Notification(
+                settings.APP_NAME, "startup", "punst is up and running", "", 0,
+                settings.NotificationUrgency.LOW,
+            )
+            notification.show(0)
 
     @dbus.service.method(dbus_interface=IFACE, in_signature='i',
                          out_signature='')
@@ -45,13 +51,15 @@ class NotificationServer(dbus.service.Object):
     @dbus.service.method(dbus_interface=IFACE, in_signature=None,
                          out_signature='ssss')
     def GetServerInformation(self):
-        return [APP_NAME, VENDOR, VERSION, SPEC_VERSION]
+        return [
+            settings.APP_NAME, settings.VENDOR, settings.VERSION, SPEC_VERSION
+        ]
 
     @dbus.service.method(dbus_interface=IFACE, in_signature='susssasa{sv}i',
                          out_signature='u')
     def Notify(self, app_name, replaces_id, icon, summary, body,
                actions, hints, expire_timeout):
-        urgency = NotificationUrgency(hints.get('urgency', 1))
+        urgency = settings.NotificationUrgency(hints.get('urgency', 1))
         notification = Notification(
             str(app_name), str(summary), str(body), str(icon),
             int(replaces_id), urgency,
