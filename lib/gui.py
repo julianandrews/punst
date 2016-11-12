@@ -1,6 +1,7 @@
+import collections
 import gi
-gi.require_version('Gtk', '3.0')
-gi.require_version('PangoCairo', '1.0')
+gi.require_version('Gtk', '3.0')  # noqa
+gi.require_version('PangoCairo', '1.0')  # noqa
 from gi.repository import Gtk, Gdk, GObject, Pango, PangoCairo
 
 from . import settings
@@ -8,19 +9,21 @@ from .utils import format_text, NotificationUrgency
 
 
 class NotificationDrawingArea(Gtk.DrawingArea):
-    def __init__(self, *args, **kwargs):
-        super(NotificationDrawingArea, self).__init__(*args, **kwargs)
+    def __init__(self, text, urgency, width):
+        super(NotificationDrawingArea, self).__init__()
+        self.width = width
+        self.height = 0
+        self.text = text
+        self.urgency = urgency
         self.connect('draw', self.draw)
-        self.text = ""
-        self.urgency = NotificationUrgency.NORMAL
 
-    def build_layout(self, cr, width):
+    def build_layout(self, cr):
         # FIXME: respect settings.HEIGHT
         layout = PangoCairo.create_layout(cr)
         desc = Pango.FontDescription(settings.FONT)
         layout.set_font_description(desc)
         layout.set_width(Pango.SCALE * (
-            width - 2 * (settings.PADDING[0] + settings.FRAME_WIDTH)
+            self.width - 2 * (settings.PADDING[0] + settings.FRAME_WIDTH)
         ))
         layout.set_alignment(
             getattr(Pango.Alignment, settings.ALIGNMENT.upper())
@@ -32,36 +35,10 @@ class NotificationDrawingArea(Gtk.DrawingArea):
             layout.set_text(self.text, -1)  # FIXME: strip markup
         return layout
 
-    def set_monitor_dimensions(self):
-        screen = Gdk.Screen.get_default()
-        monitor_rect = screen.get_monitor_geometry(settings.MONITOR_NUMBER)
-        self.monitor_x = monitor_rect.x
-        self.monitor_y = monitor_rect.y
-        self.monitor_width = monitor_rect.width
-        self.monitor_height = monitor_rect.height
-
-    def position_window(self, width, height):
-        if settings.INVERT_X:
-            x = self.monitor_width - width - settings.X
-        else:
-            x = self.monitor_x + settings.X
-        if settings.INVERT_Y:
-            y = self.monitor_height - height - settings.Y
-        else:
-            y = self.monitor_y + settings.Y
-
-        parent = self.get_parent_window()
-        parent.resize(width, height)
-        parent.move(x, y)
-
     def draw(self, widget, cr):
-        self.set_monitor_dimensions()
-        width = min(
-            (settings.WIDTH - 1) % self.monitor_width + 1,
-            self.monitor_width - settings.X - settings.FRAME_WIDTH
-        )
-        layout = self.build_layout(cr, width)
-        height = layout.get_pixel_size()[1] + 2 * (settings.PADDING[1] + settings.FRAME_WIDTH)
+        layout = self.build_layout(cr)
+        self.height = layout.get_pixel_size()[1] + \
+            2 * (settings.PADDING[1] + settings.FRAME_WIDTH)
 
         bg_color = settings.BG_COLORS[self.urgency]
         fg_color = settings.FG_COLORS[self.urgency]
@@ -71,10 +48,10 @@ class NotificationDrawingArea(Gtk.DrawingArea):
             frame_color = settings.FRAME_COLOR
 
         cr.set_source_rgb(*bg_color)
-        cr.rectangle(0, 0, width, height)
+        cr.rectangle(0, 0, self.width, self.height)
         cr.fill()
         cr.set_source_rgb(*frame_color)
-        cr.rectangle(0, 0, width, height)
+        cr.rectangle(0, 0, self.width, self.height)
         cr.set_line_width(2 * settings.FRAME_WIDTH)
         cr.stroke()
         cr.set_source_rgb(*fg_color)
@@ -83,39 +60,110 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         PangoCairo.update_layout(cr, layout)
         PangoCairo.show_layout(cr, layout)
 
-        self.position_window(width, height)
+        self.get_parent().get_parent().position()
 
 
 class NotificationWindow(Gtk.Window):
     def __init__(self):
         super(NotificationWindow, self).__init__(type=Gtk.WindowType.POPUP)
+
+        self.notifications = []
+        self.timeouts = {}
+        self.set_dimensions()
+        self.box = Gtk.VBox()
+        self.box.show()
+        self.add(self.box)
+
         self.set_decorated(False)
         self.set_keep_above(True)
         self.set_skip_taskbar_hint(True)
         self.set_skip_pager_hint(True)
         self.set_accept_focus(False)
-        self.timeout = None
-        self.drawing_area = NotificationDrawingArea()
-        self.drawing_area.show()
-        self.add(self.drawing_area)
         self.connect('button-release-event', self.on_click)
 
-    def popup(self, summary, body, urgency):
-        self.drawing_area.text = format_text(settings.FORMAT, summary, body)
-        self.drawing_area.urgency = urgency
-        self.queue_draw()
-        self.show()
-        if self.timeout:
-            GObject.source_remove(self.timeout)
-        timeout = settings.TIMEOUTS[urgency]
-        if timeout is not None:
-            self.timeout = GObject.timeout_add(timeout, self.remove)
+    def add_notification(self, notification, expire_timeout):
+        self.notifications.append(notification)
+        timeout = self.timeouts.get(notification.message_id)
+        if timeout:
+            GObject.source_remove(timeout)
+            del self.timeouts[notification.message_id]
+        if expire_timeout == -1:
+            expire_timeout = settings.TIMEOUTS[notification.urgency]
+        if expire_timeout:
+            self.timeouts[notification.message_id] = GObject.timeout_add(
+                expire_timeout, lambda: self.remove_notification(notification)
+            )
+        self.display_notifications()
 
-    def remove(self):
-        self.hide()
-        if self.timeout:
-            GObject.source_remove(self.timeout)
-            self.timeout = None
+    def remove_notification(self, notification):
+        timeout = self.timeouts.get(notification.message_id)
+        if timeout:
+            GObject.source_remove(timeout)
+            del self.timeouts[notification.message_id]
+        if notification in self.notifications:
+            self.notifications.remove(notification)
+        if self.notifications and self.get_property('visible'):
+            self.display_notifications()
+        else:
+            self.hide()
+
+    def get_notifications_to_draw(self):
+        by_urgency = collections.defaultdict(list)
+        for notification in self.notifications:
+            by_urgency[notification.urgency].append(notification)
+        return [
+            by_urgency[urgency][-1]
+            for urgency in reversed(NotificationUrgency)
+            if by_urgency.get(urgency)
+        ]
+
+    def display_notifications(self):
+        for child in self.box.get_children():
+            self.box.remove(child)
+        for notification in self.get_notifications_to_draw():
+            text = format_text(
+                settings.FORMAT, notification.summary, notification.body
+            )
+            drawing_area = NotificationDrawingArea(
+                text, notification.urgency, self.width
+            )
+            drawing_area.show()
+            self.box.add(drawing_area)
+        self.show()
+        self.queue_draw()
+
+    def set_dimensions(self):
+        screen = Gdk.Screen.get_default()
+        monitor_rect = screen.get_monitor_geometry(settings.MONITOR_NUMBER)
+        self.width = min(
+            (settings.WIDTH - 1) % monitor_rect.width + 1,
+            monitor_rect.width - settings.X - settings.FRAME_WIDTH
+        )
+        if settings.INVERT_X:
+            self.x_offset = monitor_rect.width - settings.X
+        else:
+            self.x_offset = monitor_rect.x + settings.X
+        if settings.INVERT_Y:
+            self.y_offset = monitor_rect.height - settings.Y
+        else:
+            self.y_offset = monitor_rect.y + settings.Y
+
+    def position(self):
+        height = sum(w.height for w in self.box.get_children())
+        width = self.width
+
+        y = self.y_offset - (height if settings.INVERT_Y else 0)
+        x = self.x_offset - (width if settings.INVERT_X else 0)
+
+        self.resize(width, height)
+        self.move(x, y)
+
+    def clear(self):
+        self.notifications = []
+        for message_id, timeout in self.timeouts.items():
+            GObject.source_remove(timeout)
+            del self.timeouts[message_id]
 
     def on_click(self, event, data=None):
-        self.remove()
+        self.clear()
+        self.hide()

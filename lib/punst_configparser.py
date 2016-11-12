@@ -1,6 +1,6 @@
 try:
     from configparser import RawConfigParser
-except ImportError:
+except ImportError:  # Python 2
     from ConfigParser import RawConfigParser
 
 from .utils import hex_to_rgb, parse_geometry

@@ -17,11 +17,11 @@ class Notification(object):
         self.__notifications.pop(self.message_id, None)
         self.__notifications[self.message_id] = self
 
-    def show(self):
-        self.__window.popup(self.summary, self.body, self.urgency)
+    def show(self, expire_timeout):
+        self.__window.add_notification(self, expire_timeout)
 
     def close(self):
-        self.__window.remove()
+        self.__window.remove_notification(self)
 
     @classmethod
     def get_by_id(cls, message_id):
@@ -39,3 +39,9 @@ class Notification(object):
 
     def __str__(self):
         return "{} - {}".format(self.summary, self.body)
+
+    def __repr__(self):
+        return "Notification({})".format(self.summary)
+
+    def __eq__(self, other):
+        return self.message_id == other.message_id

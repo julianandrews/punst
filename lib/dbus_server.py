@@ -54,7 +54,7 @@ class NotificationServer(dbus.service.Object):
                actions, hints, expire_timeout):
         urgency = NotificationUrgency(hints.get('urgency', 1))
         notification = Notification(str(summary), str(body), int(replaces_id), urgency)
-        notification.show()
+        notification.show(int(expire_timeout))
         return notification.message_id
 
     @dbus.service.signal(dbus_interface=IFACE, signature='uu')
