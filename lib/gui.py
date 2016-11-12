@@ -2,24 +2,43 @@ import collections
 import gi
 gi.require_version('Gtk', '3.0')  # noqa
 gi.require_version('PangoCairo', '1.0')  # noqa
-from gi.repository import Gtk, Gdk, GObject, Pango, PangoCairo
+from gi.repository import Gdk, GObject, Gtk, Pango, PangoCairo
 
 from . import settings
 from .utils import format_text, NotificationUrgency
 
 
 class NotificationDrawingArea(Gtk.DrawingArea):
-    def __init__(self, text, urgency, width):
+    def __init__(self, summary, body, urgency, width):
         super(NotificationDrawingArea, self).__init__()
+        self.set_text(summary, body)
+        self.urgency = urgency
         self.width = width
         self.height = 0
-        self.text = text
-        self.urgency = urgency
         self.connect('draw', self.draw)
+
+    def set_text(self, summary, body):
+        if settings.ALLOW_MARKUP:
+            # escape text if 'plain_text' is True or the markup is bad
+            use_plain_text = settings.PLAIN_TEXT
+            if not settings.PLAIN_TEXT:
+                try:
+                    text = format_text(settings.FORMAT, summary, body)
+                    Pango.parse_markup(text, -1, u'\x00')
+                except GObject.GError:
+                    use_plain_text = True
+            if use_plain_text:
+                summary  = GObject.markup_escape_text(summary)
+                body  = GObject.markup_escape_text(body)
+        self.text = format_text(settings.FORMAT, summary, body)
 
     def build_layout(self, cr):
         # FIXME: respect settings.HEIGHT
         layout = PangoCairo.create_layout(cr)
+        if settings.ALLOW_MARKUP:
+            layout.set_markup(self.text, -1)
+        else:
+            layout.set_text(self.text, -1)
         desc = Pango.FontDescription(settings.FONT)
         layout.set_font_description(desc)
         layout.set_width(Pango.SCALE * (
@@ -29,10 +48,6 @@ class NotificationDrawingArea(Gtk.DrawingArea):
             getattr(Pango.Alignment, settings.ALIGNMENT.upper())
         )
         layout.set_wrap(Pango.WrapMode.WORD_CHAR)
-        if settings.USE_MARKUP:
-            layout.set_markup(self.text, -1)
-        else:
-            layout.set_text(self.text, -1)  # FIXME: strip markup
         return layout
 
     def draw(self, widget, cr):
@@ -121,11 +136,9 @@ class NotificationWindow(Gtk.Window):
         for child in self.box.get_children():
             self.box.remove(child)
         for notification in self.get_notifications_to_draw():
-            text = format_text(
-                settings.FORMAT, notification.summary, notification.body
-            )
             drawing_area = NotificationDrawingArea(
-                text, notification.urgency, self.width
+                notification.summary, notification.body, notification.urgency,
+                self.width,
             )
             drawing_area.show()
             self.box.add(drawing_area)

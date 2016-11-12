@@ -20,7 +20,8 @@ config.read(config_files)
 
 try:
     FONT = config.get('global', 'font')
-    USE_MARKUP = config.getboolean('global', 'allow_markup')
+    ALLOW_MARKUP = config.getboolean('global', 'allow_markup')
+    PLAIN_TEXT = config.getboolean('global', 'plain_text')
     FORMAT = config.get('global', 'format').encode().decode('unicode_escape')
     ALIGNMENT = config.getalignment('global', 'alignment')
     WIDTH, HEIGHT, INVERT_X, X, INVERT_Y, Y = config.getgeometry(
