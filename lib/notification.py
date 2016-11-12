@@ -1,4 +1,8 @@
 import collections
+import gi
+gi.require_version('Gtk', '3.0')  # noqa
+gi.require_version('PangoCairo', '1.0')  # noqa
+from gi.repository import GObject, Pango
 import os.path
 
 from .gui import NotificationWindow
@@ -28,9 +32,9 @@ class Notification(object):
         self.__window.remove_notification(self)
 
     def get_formatted_text(self):
-        format_string = settings.FORMAT
         formatted = ""
         i = 0
+        format_string = settings.FORMAT
         while i < len(format_string):
             c1 = format_string[i]
             c2 = format_string[i + 1] if i < len(format_string) + 1 else None
@@ -38,20 +42,40 @@ class Notification(object):
                 if c2 == '%':
                     formatted += '%'
                 elif c2 == 'a':
-                    formatted += self.app_name
+                    formatted += self.clean_text(self.app_name)
                 elif c2 == 's':
-                    formatted += self.summary
+                    formatted += self.clean_text(self.summary)
                 elif c2 == 'b':
-                    formatted += self.body
+                    formatted += self.clean_text(self.body)
                 elif c2 == 'i':
-                    formatted += self.icon
+                    formatted += self.clean_text(self.icon)
                 elif c2 == 'I':
-                    formatted += os.path.basename(self.icon)
+                    formatted += self.clean_text(os.path.basename(self.icon))
                 i += 2
             else:
                 formatted += c1
                 i += 1
         return formatted
+
+    def clean_text(self, text):
+        use_plain_text = settings.PLAIN_TEXT
+        if not use_plain_text:
+            # Default to using plain text if the markup can't be parsed
+            try:
+                parsed = Pango.parse_markup(text, -1, u'\x00')
+            except GObject.GError:
+                use_plain_text = True
+
+        if settings.ALLOW_MARKUP:
+            if use_plain_text:
+                return GObject.markup_escape_text(text)
+            else:
+                return text
+        else:
+            if use_plain_text:
+                return text
+            else:
+                return parsed.text
 
     @classmethod
     def get_by_id(cls, message_id):

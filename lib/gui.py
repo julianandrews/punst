@@ -10,29 +10,11 @@ from . import settings
 class NotificationDrawingArea(Gtk.DrawingArea):
     def __init__(self, notification, width):
         super(NotificationDrawingArea, self).__init__()
-        self.set_text(notification)
+        self.text = notification.formatted_text
         self.urgency = notification.urgency
         self.width = width
         self.height = 0
         self.connect('draw', self.draw)
-
-    def set_text(self, notification):
-        text = notification.formatted_text
-        use_plain_text = settings.PLAIN_TEXT
-        if not settings.PLAIN_TEXT:
-            # Default to using plain text if the markup can't be parsed
-            try:
-                parsed = Pango.parse_markup(text, -1, u'\x00')
-            except GObject.GError:
-                use_plain_text = True
-
-        if not settings.ALLOW_MARKUP and not use_plain_text:
-            self.text = parsed.text
-        else:
-            if settings.ALLOW_MARKUP and use_plain_text:
-                summary = GObject.markup_escape_text(summary)
-                body = GObject.markup_escape_text(body)
-            self.text = notification.formatted_text
 
     def build_layout(self, cr):
         layout = PangoCairo.create_layout(cr)
