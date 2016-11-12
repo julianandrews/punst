@@ -58,6 +58,8 @@ class Notification(object):
         return formatted
 
     def clean_text(self, text):
+        if settings.IGNORE_NEWLINE:
+            text = text.replace('\n', '')
         use_plain_text = settings.PLAIN_TEXT
         if not use_plain_text:
             # Default to using plain text if the markup can't be parsed

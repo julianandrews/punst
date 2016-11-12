@@ -44,6 +44,7 @@ try:
     FORMAT = config.get('global', 'format').encode().decode('unicode_escape')
     ALIGNMENT = config.getenum('global', 'alignment', AlignmentType)
     WORD_WRAP = config.getboolean('global', 'word_wrap')
+    IGNORE_NEWLINE = config.getboolean('global', 'ignore_newline')
     WIDTH, HEIGHT, INVERT_X, X, INVERT_Y, Y = config.getgeometry(
         'global', 'geometry'
     )
