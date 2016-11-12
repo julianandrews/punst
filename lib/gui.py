@@ -5,7 +5,6 @@ gi.require_version('PangoCairo', '1.0')  # noqa
 from gi.repository import Gdk, GObject, Gtk, Pango, PangoCairo
 
 from . import settings
-from .utils import NotificationUrgency
 
 
 class NotificationDrawingArea(Gtk.DrawingArea):
@@ -133,7 +132,7 @@ class NotificationWindow(Gtk.Window):
             by_urgency[notification.urgency].append(notification)
         return [
             by_urgency[urgency][-1]
-            for urgency in reversed(NotificationUrgency)
+            for urgency in reversed(settings.NotificationUrgency)
             if by_urgency.get(urgency)
         ]
 

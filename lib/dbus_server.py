@@ -3,8 +3,7 @@ import dbus.service
 import enum
 
 from .notification import Notification
-from .settings import APP_NAME, VENDOR, VERSION
-from .utils import NotificationUrgency
+from .settings import NotificationUrgency, APP_NAME, VENDOR, VERSION
 
 
 SPEC_VERSION = '1.2'

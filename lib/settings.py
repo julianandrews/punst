@@ -1,10 +1,17 @@
 from __future__ import print_function
+import enum
 import os
 import sys
 import xdg.BaseDirectory
 
 from .punst_configparser import PunstConfigParser, ConfigError
-from .utils import NotificationUrgency
+
+
+class NotificationUrgency(enum.Enum):
+    LOW = 0
+    NORMAL = 1
+    CRITICAL = 2
+
 
 APP_NAME = 'punst'
 VENDOR = ''
