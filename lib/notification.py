@@ -83,6 +83,18 @@ class Notification(object):
         return cls.__notifications.get(message_id)
 
     @classmethod
+    def close_last(cls):
+        cls.__window.close_last()
+
+    @classmethod
+    def close_all(cls):
+        cls.__window.close_all()
+
+    @classmethod
+    def history(cls):
+        cls.__window.history()
+
+    @classmethod
     def _get_next_message_id(cls):
         ids = list(cls.__notifications.keys())
         if not ids:

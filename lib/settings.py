@@ -60,6 +60,10 @@ try:
     FRAME_WIDTH = config.getint('frame', 'width')
     FRAME_COLOR = config.gethexcolor('frame', 'color')
 
+    SHORTCUT_CLOSE = config.getaccelerator('shortcuts', 'close')
+    SHORTCUT_CLOSE_ALL = config.getaccelerator('shortcuts', 'close_all')
+    SHORTCUT_HISTORY = config.getaccelerator('shortcuts', 'history')
+
     BG_COLORS = {
         NotificationUrgency.LOW: config.gethexcolor(
             'urgency_low', 'background'

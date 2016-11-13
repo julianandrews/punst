@@ -123,7 +123,10 @@ class NotificationWindow(Gtk.Window):
             drawing_area = NotificationDrawingArea(notification, self.width)
             drawing_area.show()
             self.box.add(drawing_area)
-        self.show()
+        if self.notifications:
+            self.show()
+        else:
+            self.hide()
         self.queue_draw()
 
     def get_selected_monitor(self):
@@ -162,12 +165,16 @@ class NotificationWindow(Gtk.Window):
         self.resize(width, height)
         self.move(x, y)
 
-    def clear(self):
-        self.notifications = []
-        for message_id, timeout in list(self.timeouts.items()):
-            GObject.source_remove(timeout)
-            del self.timeouts[message_id]
+    def close_all(self):
+        for notification in list(self.notifications):
+            self.remove_notification(notification)
+
+    def close_last(self):
+        if self.notifications:
+            self.remove_notification(self.notifications[-1])
+
+    def history(self):
+        raise NotImplementedError  # FIXME!
 
     def on_click(self, event, data=None):
-        self.clear()
-        self.hide()
+        self.close_all()  # FIXME - should only remove the clicked message

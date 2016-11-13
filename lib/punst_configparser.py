@@ -2,7 +2,9 @@ try:
     from configparser import RawConfigParser
 except ImportError:  # Python 2
     from ConfigParser import RawConfigParser
-
+import gi
+gi.require_version('Gtk', '3.0')  # noqa
+from gi.repository import Gtk
 import re
 
 
@@ -45,6 +47,13 @@ class ConfigError(Exception):
 
 
 class PunstConfigParser(RawConfigParser):
+    def getaccelerator(self, section, option):
+        value = self.get(section, option)
+        keyval, modifiers = Gtk.accelerator_parse(value)
+        if not (keyval or modifiers):
+            raise ConfigError(section, option, "invalid keybinding")
+        return value
+
     def getenum(self, section, option, enum):
         value = self.get(section, option)
         try:
