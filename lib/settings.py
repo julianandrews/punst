@@ -99,5 +99,5 @@ except ConfigError as e:
     if DEBUG:
         raise
     else:
-        print(e.message, file=sys.stderr)
+        print(e, file=sys.stderr)
         sys.exit(1)
