@@ -164,7 +164,7 @@ class NotificationWindow(Gtk.Window):
 
     def clear(self):
         self.notifications = []
-        for message_id, timeout in self.timeouts.items():
+        for message_id, timeout in list(self.timeouts.items()):
             GObject.source_remove(timeout)
             del self.timeouts[message_id]
 

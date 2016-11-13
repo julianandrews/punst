@@ -3,7 +3,7 @@ import dbus.service
 import enum
 
 from .notification import Notification
-import settings
+from . import settings
 
 
 SPEC_VERSION = '1.2'
