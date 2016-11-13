@@ -1,7 +1,6 @@
 import collections
 import gi
 gi.require_version('Gtk', '3.0')  # noqa
-gi.require_version('PangoCairo', '1.0')  # noqa
 from gi.repository import GObject, Pango
 import os.path
 
