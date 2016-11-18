@@ -1,4 +1,5 @@
 from __future__ import print_function
+import datetime
 import enum
 import os
 import sys
@@ -43,6 +44,9 @@ try:
     PLAIN_TEXT = config.getboolean('global', 'plain_text')
     FORMAT = config.get('global', 'format').encode().decode('unicode_escape')
     ALIGNMENT = config.getenum('global', 'alignment', AlignmentType)
+    SHOW_AGE_THRESHOLD = datetime.timedelta(
+        seconds=config.getnonnegativeint('global', 'show_age_threshold')
+    )
     WORD_WRAP = config.getboolean('global', 'word_wrap')
     IGNORE_NEWLINE = config.getboolean('global', 'ignore_newline')
     WIDTH, HEIGHT, INVERT_X, X, INVERT_Y, Y = config.getgeometry(

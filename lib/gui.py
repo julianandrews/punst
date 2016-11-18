@@ -1,4 +1,5 @@
 import collections
+import datetime
 import gi
 gi.require_version('Gtk', '3.0')  # noqa
 gi.require_version('PangoCairo', '1.0')  # noqa
@@ -8,11 +9,20 @@ from . import settings
 from .notification import Notification
 
 
+def format_age(age):
+    units = ((86400, 'day'), (3600, 'hour'), (60, 'min'), (1, 'sec'))
+    remainder = age.seconds
+    for divisor, name in units:
+        value, remainder = divmod(remainder, divisor)
+        if value:
+            break
+    return "{} {}{} ago".format(value, name, '' if value == 1 else 's')
+
+
 class NotificationDrawingArea(Gtk.DrawingArea):
     def __init__(self, notification, width):
         super(NotificationDrawingArea, self).__init__()
-        self.text = notification.formatted_text
-        self.urgency = notification.urgency
+        self.notification = notification
         self.width = width
         self.height = 0
         self.connect('draw', self.draw)
@@ -23,10 +33,14 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         layout.set_font_description(Pango.FontDescription(settings.FONT))
         layout.set_alignment(getattr(Pango.Alignment, settings.ALIGNMENT.value))
 
+        text = self.notification.formatted_text
+        age = datetime.datetime.now() - self.notification.sent_at
+        if age > settings.SHOW_AGE_THRESHOLD:
+            text += " ({})".format(format_age(age))
         if settings.RENDER_MARKUP:
-            layout.set_markup(self.text, -1)
+            layout.set_markup(text, -1)
         else:
-            layout.set_text(self.text, -1)
+            layout.set_text(text, -1)
         layout.set_width(Pango.SCALE * (
             self.width - 2 * (settings.PADDING[0] + settings.FRAME_WIDTH)
         ))
@@ -44,8 +58,8 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         self.height = layout.get_pixel_size()[1] + \
             2 * (settings.PADDING[1] + settings.FRAME_WIDTH)
 
-        bg_color = settings.BG_COLORS[self.urgency]
-        fg_color = settings.FG_COLORS[self.urgency]
+        bg_color = settings.BG_COLORS[self.notification.urgency]
+        fg_color = settings.FG_COLORS[self.notification.urgency]
         if settings.FRAME_COLOR is None:
             frame_color = fg_color
         else:
@@ -65,6 +79,7 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         PangoCairo.show_layout(cr, layout)
 
         self.get_parent().get_parent().position()
+        GObject.timeout_add(500, self.queue_draw)
 
 
 class NotificationWindow(Gtk.Window):

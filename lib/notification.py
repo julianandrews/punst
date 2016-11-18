@@ -1,4 +1,5 @@
 import collections
+import datetime
 import gi
 gi.require_version('Gtk', '3.0')  # noqa
 from gi.repository import GObject, Pango
@@ -17,6 +18,7 @@ class Notification(object):
         self.icon = icon
         self.urgency = urgency
         self.message_id = replaces_id or self._get_next_message_id()
+        self.sent_at = datetime.datetime.now()
         self.formatted_text = self.get_formatted_text()
 
         self.__notifications.pop(self.message_id, None)
