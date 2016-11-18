@@ -39,7 +39,7 @@ config.read(config_files)
 
 try:
     FONT = config.get('global', 'font')
-    ALLOW_MARKUP = config.getboolean('global', 'allow_markup')
+    RENDER_MARKUP = config.getboolean('global', 'render_markup')
     PLAIN_TEXT = config.getboolean('global', 'plain_text')
     FORMAT = config.get('global', 'format').encode().decode('unicode_escape')
     ALIGNMENT = config.getenum('global', 'alignment', AlignmentType)

@@ -24,7 +24,7 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         layout.set_font_description(Pango.FontDescription(settings.FONT))
         layout.set_alignment(getattr(Pango.Alignment, settings.ALIGNMENT.value))
 
-        if settings.ALLOW_MARKUP:
+        if settings.RENDER_MARKUP:
             layout.set_markup(self.text, -1)
         else:
             layout.set_text(self.text, -1)

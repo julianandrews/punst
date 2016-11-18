@@ -52,23 +52,20 @@ class Notification(object):
         if settings.IGNORE_NEWLINE:
             text = text.replace('\n', '')
         use_plain_text = settings.PLAIN_TEXT
+
         if not use_plain_text:
-            # Default to using plain text if the markup can't be parsed
             try:
                 parsed = Pango.parse_markup(text, -1, u'\x00')
             except GObject.GError:
+                # Default to using plain text if the markup can't be parsed
                 use_plain_text = True
 
-        if settings.ALLOW_MARKUP:
-            if use_plain_text:
-                return GObject.markup_escape_text(text)
-            else:
-                return text
+        if settings.RENDER_MARKUP and use_plain_text:
+            return GObject.markup_escape_text(text)  # Render tags as plain text
+        elif not settings.RENDER_MARKUP and not use_plain_text:
+            return parsed.text  # Strip any tags
         else:
-            if use_plain_text:
-                return text
-            else:
-                return parsed.text
+            return text
 
     @classmethod
     def get_by_id(cls, message_id):
