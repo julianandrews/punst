@@ -30,8 +30,9 @@ class KeybindingManager(threading.Thread):
             event = self.display.next_event()
             if event.type in {X.KeyPress, X.KeyRelease}:
                 if event.type == X.KeyRelease:
-                    callback = self.keybindings[(event.detail, event.state)]
-                    GLib.idle_add(callback)
+                    callback = self.keybindings.get((event.detail, event.state))
+                    if callback:
+                        GLib.idle_add(callback)
                 self.display.allow_events(X.AsyncKeyboard, event.time)
             else:
                 self.display.allow_events(X.ReplayKeyboard, event.time)
