@@ -1,3 +1,4 @@
+from collections import namedtuple
 try:
     from configparser import RawConfigParser
 except ImportError:  # Python 2
@@ -8,6 +9,12 @@ from gi.repository import Gtk
 import re
 
 
+Geometry = namedtuple(
+    'Geometry', ['width', 'height', 'invert_x', 'x', 'invert_y', 'y']
+)
+Color = namedtuple('Color', ['red', 'green', 'blue'])
+
+
 def hex_to_rgb(s):
     if s[0] == s[-1] == '"' or s[0] == s[-1] == "'":
         s = s[1:-1]
@@ -15,7 +22,7 @@ def hex_to_rgb(s):
         s = s[1:]
     if len(s) != 6:
         raise ValueError("Invalid hex literal")
-    return tuple(int(s[i:i+2], 16) / 255.0 for i in range(0, 5, 2))
+    return Color(*(int(s[i:i+2], 16) / 255.0 for i in range(0, 5, 2)))
 
 
 def parse_geometry(s):
@@ -26,13 +33,13 @@ def parse_geometry(s):
         raise ValueError("Invalid geometry literal")
     else:
         vals = results.groups()
-        return (
-            int(vals[0] or 0),
-            int(vals[1] or 0),
-            vals[2] == '-',
-            int(vals[3] or 0),
-            vals[4] == '-',
-            int(vals[5] or 0)
+        return Geometry(
+            width=int(vals[0] or 0),
+            height=int(vals[1] or 0),
+            invert_x=vals[2] == '-',
+            x=int(vals[3] or 0),
+            invert_y=vals[4] == '-',
+            y=int(vals[5] or 0)
         )
 
 
