@@ -19,7 +19,6 @@ class NotificationDrawingArea(Gtk.DrawingArea):
 
     def build_layout(self, cr):
         layout = PangoCairo.create_layout(cr)
-        layout.set_ellipsize(Pango.EllipsizeMode.END)
         layout.set_wrap(Pango.WrapMode.WORD_CHAR)
         layout.set_font_description(Pango.FontDescription(settings.FONT))
         layout.set_alignment(getattr(Pango.Alignment, settings.ALIGNMENT.value))
@@ -31,8 +30,12 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         layout.set_width(Pango.SCALE * (
             self.width - 2 * (settings.PADDING[0] + settings.FRAME_WIDTH)
         ))
-        # FIXME: This isn't the correct height behavior
-        layout.set_height(-settings.HEIGHT if settings.WORD_WRAP else -1)
+        if settings.HEIGHT or not settings.WORD_WRAP:
+            layout.set_ellipsize(Pango.EllipsizeMode.END)
+            if not settings.WORD_WRAP:
+                layout.set_height(-1)
+            elif settings.HEIGHT:
+                layout.set_height(settings.HEIGHT * Pango.SCALE)
 
         return layout
 
