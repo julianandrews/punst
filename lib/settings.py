@@ -48,17 +48,17 @@ try:
     WIDTH, HEIGHT, INVERT_X, X, INVERT_Y, Y = config.getgeometry(
         'global', 'geometry'
     )
-    MONITOR_NUMBER = config.getint('global', 'monitor')
+    MONITOR_NUMBER = config.getnonnegativeint('global', 'monitor')
     FOLLOW = config.getenum('global', 'follow', FollowType)
-    HISTORY_TIMEOUT = config.getint('global', 'history_timeout') * 1000
-    HISTORY_LENGTH = config.getint('global', 'history_length')
+    HISTORY_TIMEOUT = config.getnonnegativeint('global', 'history_timeout') * 1000
+    HISTORY_LENGTH = config.getnonnegativeint('global', 'history_length')
     PADDING = (
-        config.getint('global', 'horizontal_padding'),
-        config.getint('global', 'padding'),
+        config.getnonnegativeint('global', 'horizontal_padding'),
+        config.getnonnegativeint('global', 'padding'),
     )
     STARTUP_NOTIFICATION = config.getboolean('global', 'startup_notification')
 
-    FRAME_WIDTH = config.getint('frame', 'width')
+    FRAME_WIDTH = config.getnonnegativeint('frame', 'width')
     FRAME_COLOR = config.gethexcolor('frame', 'color')
 
     SHORTCUT_CLOSE = config.getaccelerator('shortcuts', 'close')
@@ -90,13 +90,13 @@ try:
     }
 
     TIMEOUTS = {
-        NotificationUrgency.LOW: config.getint(
+        NotificationUrgency.LOW: config.getnonnegativeint(
             'urgency_low', 'timeout'
         ) * 1000,
-        NotificationUrgency.NORMAL: config.getint(
+        NotificationUrgency.NORMAL: config.getnonnegativeint(
             'urgency_normal', 'timeout'
         ) * 1000,
-        NotificationUrgency.CRITICAL: config.getint(
+        NotificationUrgency.CRITICAL: config.getnonnegativeint(
             'urgency_critical', 'timeout'
         ) * 1000,
     }

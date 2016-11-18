@@ -67,6 +67,12 @@ class PunstConfigParser(RawConfigParser):
         except ValueError:
             raise ConfigError(section, option, "invalid integer")
 
+    def getnonnegativeint(self, section, option):
+        value = self.getint(section, option)
+        if value < 0:
+            raise ConfigError(section, option, "non-negative integer required")
+        return value
+
     def getboolean(self, section, option):
         try:
             return super(PunstConfigParser, self).getboolean(section, option)
