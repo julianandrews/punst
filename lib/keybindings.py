@@ -4,8 +4,6 @@ from gi.repository import Gdk, Gtk, GLib
 import threading
 from Xlib import display, error, X
 
-from .notification import Notification
-from . import settings
 
 class KeybindingManager(threading.Thread):
     def __init__(self):
@@ -37,12 +35,3 @@ class KeybindingManager(threading.Thread):
                 self.display.allow_events(X.AsyncKeyboard, event.time)
             else:
                 self.display.allow_events(X.ReplayKeyboard, event.time)
-
-
-class PunstKeybindingManager(KeybindingManager):
-    def __init__(self):
-        super(PunstKeybindingManager, self).__init__()
-        self.add_keybinding(settings.SHORTCUT_CLOSE, Notification.close_last)
-        self.add_keybinding(settings.SHORTCUT_CLOSE_ALL, Notification.close_all)
-        self.add_keybinding(settings.SHORTCUT_HISTORY, Notification.history)
-        self.start()

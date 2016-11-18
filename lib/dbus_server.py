@@ -2,6 +2,8 @@ import dbus
 import dbus.service
 import enum
 
+from .gui import NotificationWindow
+from .keybindings import KeybindingManager
 from .notification import Notification
 from . import settings
 
@@ -26,19 +28,31 @@ class NotificationServer(dbus.service.Object):
         bus.request_name(self.BUS_NAME)
         bus_name = dbus.service.BusName(self.BUS_NAME, bus=bus)
         dbus.service.Object.__init__(self, bus_name, self.OPATH)
+        self.window = NotificationWindow()
+        self.keybindings = KeybindingManager()
+        self.keybindings.add_keybinding(
+            settings.SHORTCUT_CLOSE, self.window.close_last
+        )
+        self.keybindings.add_keybinding(
+            settings.SHORTCUT_CLOSE_ALL, self.window.close_all
+        )
+        self.keybindings.add_keybinding(
+            settings.SHORTCUT_HISTORY, self.window.history
+        )
+        self.keybindings.start()
         if settings.STARTUP_NOTIFICATION:
             notification = Notification(
                 settings.APP_NAME, "startup", "punst is up and running", "", 0,
                 settings.NotificationUrgency.LOW,
             )
-            notification.show(0)
+            self.window.add_notification(notification, 0)
 
     @dbus.service.method(dbus_interface=IFACE, in_signature='i',
                          out_signature='')
     def CloseNotification(self, message_id):
         notification = Notification.get_by_id(int(message_id))
         if notification:
-            notification.close()
+            self.window.remove_notification(notification)
             self.NotificationClosed(message_id, NotificationClosedReason.CLOSED)
         else:
             raise dbus.DBusException
@@ -64,7 +78,7 @@ class NotificationServer(dbus.service.Object):
             str(app_name), str(summary), str(body), str(icon),
             int(replaces_id), urgency,
         )
-        notification.show(int(expire_timeout))
+        self.window.add_notification(notification, int(expire_timeout))
         return notification.message_id
 
     @dbus.service.signal(dbus_interface=IFACE, signature='uu')

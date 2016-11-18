@@ -50,6 +50,7 @@ try:
     )
     MONITOR_NUMBER = config.getint('global', 'monitor')
     FOLLOW = config.getenum('global', 'follow', FollowType)
+    HISTORY_TIMEOUT = config.getint('global', 'history_timeout') * 1000
     HISTORY_LENGTH = config.getint('global', 'history_length')
     PADDING = (
         config.getint('global', 'horizontal_padding'),

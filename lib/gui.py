@@ -5,6 +5,7 @@ gi.require_version('PangoCairo', '1.0')  # noqa
 from gi.repository import Gdk, GObject, Gtk, Pango, PangoCairo
 
 from . import settings
+from .notification import Notification
 
 
 class NotificationDrawingArea(Gtk.DrawingArea):
@@ -30,6 +31,7 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         layout.set_width(Pango.SCALE * (
             self.width - 2 * (settings.PADDING[0] + settings.FRAME_WIDTH)
         ))
+        # FIXME: This isn't the correct height behavior
         layout.set_height(-settings.HEIGHT if settings.WORD_WRAP else -1)
 
         return layout
@@ -68,6 +70,8 @@ class NotificationWindow(Gtk.Window):
 
         self.notifications = []
         self.timeouts = {}
+        self.history_index = None
+        self.history_timeout = None
         self.box = Gtk.VBox()
         self.box.show()
         self.add(self.box)
@@ -91,7 +95,7 @@ class NotificationWindow(Gtk.Window):
             self.timeouts[notification.message_id] = GObject.timeout_add(
                 expire_timeout, lambda: self.remove_notification(notification)
             )
-        self.display_notifications()
+        self.display()
 
     def remove_notification(self, notification):
         timeout = self.timeouts.get(notification.message_id)
@@ -101,29 +105,33 @@ class NotificationWindow(Gtk.Window):
         if notification in self.notifications:
             self.notifications.remove(notification)
         if self.notifications and self.get_property('visible'):
-            self.display_notifications()
+            self.display()
         else:
             self.hide()
 
-    def get_notifications_to_draw(self):
-        by_urgency = collections.defaultdict(list)
-        for notification in self.notifications:
-            by_urgency[notification.urgency].append(notification)
-        return [
-            by_urgency[urgency][-1]
-            for urgency in reversed(settings.NotificationUrgency)
-            if by_urgency.get(urgency)
-        ]
+    def get_active_notifications(self):
+        if self.history_index:
+            return [Notification.get_by_index(self.history_index)]
+        else:
+            by_urgency = collections.defaultdict(list)
+            for notification in self.notifications:
+                by_urgency[notification.urgency].append(notification)
+            return [
+                by_urgency[urgency][-1]
+                for urgency in reversed(settings.NotificationUrgency)
+                if by_urgency.get(urgency)
+            ]
 
-    def display_notifications(self):
+    def display(self):
+        notifications = self.get_active_notifications()
         self.set_dimensions()
         for child in self.box.get_children():
             self.box.remove(child)
-        for notification in self.get_notifications_to_draw():
+        for notification in notifications:
             drawing_area = NotificationDrawingArea(notification, self.width)
             drawing_area.show()
             self.box.add(drawing_area)
-        if self.notifications:
+        if notifications:
             self.show()
         else:
             self.hide()
@@ -166,15 +174,29 @@ class NotificationWindow(Gtk.Window):
         self.move(x, y)
 
     def close_all(self):
+        self.history_index = None
         for notification in list(self.notifications):
             self.remove_notification(notification)
+        self.display()
 
     def close_last(self):
+        self.history_index = None
         if self.notifications:
             self.remove_notification(self.notifications[-1])
+        self.display()
 
     def history(self):
-        raise NotImplementedError  # FIXME!
+        if self.history_index is None:
+            self.history_index = 0
+        if abs(self.history_index) < Notification.count():
+            self.history_index -= 1
+        if settings.HISTORY_TIMEOUT:
+            if self.history_timeout:
+                GObject.source_remove(self.history_timeout)
+            self.history_timeout = GObject.timeout_add(
+                settings.HISTORY_TIMEOUT, self.close_all
+            )
+        self.display()
 
     def on_click(self, event, data=None):
         self.close_all()  # FIXME - should only remove the clicked message

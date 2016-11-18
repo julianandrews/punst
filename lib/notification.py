@@ -4,13 +4,11 @@ gi.require_version('Gtk', '3.0')  # noqa
 from gi.repository import GObject, Pango
 import os.path
 
-from .gui import NotificationWindow
 from . import settings
 
 
 class Notification(object):
     __notifications = collections.OrderedDict()
-    __window = NotificationWindow()
 
     def __init__(self, app_name, summary, body, icon, replaces_id, urgency):
         self.app_name = app_name
@@ -23,12 +21,6 @@ class Notification(object):
 
         self.__notifications.pop(self.message_id, None)
         self.__notifications[self.message_id] = self
-
-    def show(self, expire_timeout):
-        self.__window.add_notification(self, expire_timeout)
-
-    def close(self):
-        self.__window.remove_notification(self)
 
     def get_formatted_text(self):
         formatted = ""
@@ -83,16 +75,11 @@ class Notification(object):
         return cls.__notifications.get(message_id)
 
     @classmethod
-    def close_last(cls):
-        cls.__window.close_last()
-
-    @classmethod
-    def close_all(cls):
-        cls.__window.close_all()
-
-    @classmethod
-    def history(cls):
-        cls.__window.history()
+    def get_by_index(cls, index):
+        try:
+            return list(cls.__notifications.items())[index][1]
+        except IndexError:
+            return None
 
     @classmethod
     def _get_next_message_id(cls):
@@ -103,6 +90,10 @@ class Notification(object):
             if len(ids) > settings.HISTORY_LENGTH:
                 del cls.__notifications[ids[0]]
             return ids[-1] + 1
+
+    @classmethod
+    def count(cls):
+        return len(cls.__notifications)
 
     def __str__(self):
         return "{} - {}".format(self.summary, self.body)
