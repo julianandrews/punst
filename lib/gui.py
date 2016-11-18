@@ -175,6 +175,9 @@ class NotificationWindow(Gtk.Window):
 
     def close_all(self):
         self.history_index = None
+        if self.history_timeout:
+            GObject.source_remove(self.history_timeout)
+            self.history_timeout = None
         for notification in list(self.notifications):
             self.remove_notification(notification)
         self.display()
