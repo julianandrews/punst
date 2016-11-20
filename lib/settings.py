@@ -26,6 +26,11 @@ class FollowType(enum.Enum):
     KEYBOARD = 2
 
 
+class IconPositionType(enum.Enum):
+    LEFT = 0
+    RIGHT = 1
+
+
 APP_NAME = 'punst'
 VENDOR = ''
 VERSION = '0.1'
@@ -61,6 +66,8 @@ try:
         config.getnonnegativeint('global', 'padding'),
     )
     STARTUP_NOTIFICATION = config.getboolean('global', 'startup_notification')
+    ICON_POSITION = config.getenum('global', 'icon_position', IconPositionType)
+    ICON_FOLDERS = config.get('global', 'icon_folders').split(':')
 
     FRAME_WIDTH = config.getnonnegativeint('frame', 'width')
     FRAME_COLOR = config.gethexcolor('frame', 'color')

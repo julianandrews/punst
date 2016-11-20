@@ -1,9 +1,11 @@
+import cairo
 import collections
 import datetime
 import gi
 gi.require_version('Gtk', '3.0')  # noqa
 gi.require_version('PangoCairo', '1.0')  # noqa
 from gi.repository import Gdk, GObject, Gtk, Pango, PangoCairo
+import os.path
 
 from . import settings
 from .notification import Notification
@@ -23,9 +25,25 @@ class NotificationDrawingArea(Gtk.DrawingArea):
     def __init__(self, notification, width):
         super(NotificationDrawingArea, self).__init__()
         self.notification = notification
+        self.icon = self.get_icon()
         self.width = width
         self.height = 0
         self.connect('draw', self.draw)
+
+    def get_icon_path(self):
+        for path in settings.ICON_FOLDERS:
+            filename = os.path.join(path, self.notification.icon)
+            if os.path.isfile(filename):
+                return filename
+
+    def get_icon(self):
+        filename = self.get_icon_path()
+        if filename:
+            return cairo.ImageSurface.create_from_png(filename)
+
+    @property
+    def icon_width(self):
+        return self.icon.get_width() + settings.PADDING[0] if self.icon else 0
 
     def build_layout(self, cr):
         layout = PangoCairo.create_layout(cr)
@@ -43,6 +61,7 @@ class NotificationDrawingArea(Gtk.DrawingArea):
             layout.set_text(text, -1)
         layout.set_width(Pango.SCALE * (
             self.width - 2 * (settings.PADDING[0] + settings.FRAME_WIDTH)
+            - self.icon_width
         ))
         if settings.HEIGHT or not settings.WORD_WRAP:
             layout.set_ellipsize(Pango.EllipsizeMode.END)
@@ -56,30 +75,43 @@ class NotificationDrawingArea(Gtk.DrawingArea):
 
         return layout
 
+    def draw_bg(self, cr):
+        cr.set_source_rgb(*settings.BG_COLORS[self.notification.urgency])
+        cr.rectangle(0, 0, self.width, self.height)
+        cr.fill()
+        cr.set_source_rgb(*settings.FRAME_COLOR)
+        cr.rectangle(0, 0, self.width, self.height)
+        cr.set_line_width(2 * settings.FRAME_WIDTH)
+        cr.stroke()
+
+    def draw_icon(self, cr):
+        if self.icon:
+            if settings.ICON_POSITION == settings.IconPositionType.RIGHT:
+                x = self.width - self.icon_width - settings.FRAME_WIDTH
+            else:
+                x = settings.PADDING[0] + settings.FRAME_WIDTH
+            y = settings.PADDING[0] + settings.FRAME_WIDTH
+            cr.set_source_surface(self.icon, x, y)
+            cr.paint()
+
+    def draw_layout(self, cr, layout):
+        cr.translate(*settings.PADDING)
+        cr.translate(settings.FRAME_WIDTH, settings.FRAME_WIDTH)
+        if settings.ICON_POSITION == settings.IconPositionType.LEFT:
+            cr.translate(self.icon_width, 0.0)
+        cr.set_source_rgb(*settings.FG_COLORS[self.notification.urgency])
+        PangoCairo.update_layout(cr, layout)
+        PangoCairo.show_layout(cr, layout)
+        cr.identity_matrix()
+
     def draw(self, widget, cr):
         layout = self.build_layout(cr)
         self.height = layout.get_pixel_size()[1] + \
             2 * (settings.PADDING[1] + settings.FRAME_WIDTH)
 
-        bg_color = settings.BG_COLORS[self.notification.urgency]
-        fg_color = settings.FG_COLORS[self.notification.urgency]
-        if settings.FRAME_COLOR is None:
-            frame_color = fg_color
-        else:
-            frame_color = settings.FRAME_COLOR
-
-        cr.set_source_rgb(*bg_color)
-        cr.rectangle(0, 0, self.width, self.height)
-        cr.fill()
-        cr.set_source_rgb(*frame_color)
-        cr.rectangle(0, 0, self.width, self.height)
-        cr.set_line_width(2 * settings.FRAME_WIDTH)
-        cr.stroke()
-        cr.set_source_rgb(*fg_color)
-        cr.translate(*settings.PADDING)
-        cr.translate(settings.FRAME_WIDTH, settings.FRAME_WIDTH)
-        PangoCairo.update_layout(cr, layout)
-        PangoCairo.show_layout(cr, layout)
+        self.draw_bg(cr)
+        self.draw_icon(cr)
+        self.draw_layout(cr, layout)
 
         self.get_parent().get_parent().position()
         GObject.timeout_add(500, self.queue_draw)
