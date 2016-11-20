@@ -48,6 +48,7 @@ try:
     RENDER_MARKUP = config.getboolean('global', 'render_markup')
     PLAIN_TEXT = config.getboolean('global', 'plain_text')
     FORMAT = config.get('global', 'format').encode().decode('unicode_escape')
+    INDICATE_HIDDEN = config.getboolean('global', 'indicate_hidden')
     ALIGNMENT = config.getenum('global', 'alignment', AlignmentType)
     SHOW_AGE_THRESHOLD = datetime.timedelta(
         seconds=config.getnonnegativeint('global', 'show_age_threshold')

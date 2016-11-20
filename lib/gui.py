@@ -22,11 +22,12 @@ def format_age(age):
 
 
 class NotificationDrawingArea(Gtk.DrawingArea):
-    def __init__(self, notification, width):
+    def __init__(self, notification, width, hidden_count):
         super(NotificationDrawingArea, self).__init__()
         self.notification = notification
         self.icon = self.get_icon()
         self.width = width
+        self.hidden_count = hidden_count
         self.height = 0
         self.connect('draw', self.draw)
 
@@ -56,6 +57,9 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         age = datetime.datetime.now() - self.notification.sent_at
         if age > settings.SHOW_AGE_THRESHOLD:
             text += " ({})".format(format_age(age))
+        if settings.INDICATE_HIDDEN and self.hidden_count:
+            text = "({}) {}".format(self.hidden_count, text)
+
         if settings.RENDER_MARKUP:
             layout.set_markup(text, -1)
         else:
@@ -165,13 +169,13 @@ class NotificationWindow(Gtk.Window):
 
     def get_active_notifications(self):
         if self.history_index:
-            return [Notification.get_by_index(self.history_index)]
+            return [(Notification.get_by_index(self.history_index), 0)]
         else:
             by_urgency = collections.defaultdict(list)
             for notification in self.notifications:
                 by_urgency[notification.urgency].append(notification)
             return [
-                by_urgency[urgency][-1]
+                (by_urgency[urgency][-1], len(by_urgency[urgency]) - 1)
                 for urgency in reversed(settings.NotificationUrgency)
                 if by_urgency.get(urgency)
             ]
@@ -181,8 +185,10 @@ class NotificationWindow(Gtk.Window):
         self.set_dimensions()
         for child in self.box.get_children():
             self.box.remove(child)
-        for notification in notifications:
-            drawing_area = NotificationDrawingArea(notification, self.width)
+        for notification, hidden_count in notifications:
+            drawing_area = NotificationDrawingArea(
+                notification, self.width, hidden_count
+            )
             drawing_area.show()
             self.box.add(drawing_area)
         if notifications:
