@@ -49,7 +49,10 @@ class NotificationDrawingArea(Gtk.DrawingArea):
             if not settings.WORD_WRAP:
                 layout.set_height(-1)
             elif settings.HEIGHT:
-                layout.set_height(settings.HEIGHT * Pango.SCALE)
+                layout.set_height(
+                    settings.HEIGHT * Pango.SCALE -
+                    2 * (settings.PADDING[1] + settings.FRAME_WIDTH)
+                )
 
         return layout
 
