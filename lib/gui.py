@@ -50,6 +50,7 @@ class NotificationDrawingArea(Gtk.DrawingArea):
         layout.set_wrap(Pango.WrapMode.WORD_CHAR)
         layout.set_font_description(Pango.FontDescription(settings.FONT))
         layout.set_alignment(getattr(Pango.Alignment, settings.ALIGNMENT.value))
+        layout.set_spacing(Pango.SCALE * settings.LINE_SPACING)
 
         text = self.notification.formatted_text
         age = datetime.datetime.now() - self.notification.sent_at

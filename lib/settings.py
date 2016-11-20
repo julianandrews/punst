@@ -61,6 +61,7 @@ try:
     FOLLOW = config.getenum('global', 'follow', FollowType)
     HISTORY_TIMEOUT = config.getnonnegativeint('global', 'history_timeout') * 1000
     HISTORY_LENGTH = config.getnonnegativeint('global', 'history_length')
+    LINE_SPACING = config.getnonnegativeint('global', 'line_spacing')
     PADDING = (
         config.getnonnegativeint('global', 'horizontal_padding'),
         config.getnonnegativeint('global', 'padding'),
